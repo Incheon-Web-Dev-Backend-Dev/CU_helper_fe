@@ -15,14 +15,15 @@ export const metadata: Metadata = {
   description: "Your helpful companion",
 };
 
+/*** 루트 레이아웃 - 라이트 모드 고정 ***/
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="h-full bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <html lang="ko" className={`${geistSans.variable} h-full antialiased`} style={{ colorScheme: "light" }}>
+      <body className="h-full bg-white text-[#1A1A1A]">
         {children}
       </body>
     </html>
