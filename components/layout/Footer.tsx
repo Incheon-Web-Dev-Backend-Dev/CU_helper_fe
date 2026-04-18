@@ -8,7 +8,7 @@ export default function Footer() {
     <footer className="w-full border-t border-zinc-100 bg-[#F8F8F8]">
       <div className="flex flex-col items-center gap-3 px-4 py-5 text-center">
         <p className="text-xs text-zinc-400">
-          © {year} CU Helper. All rights reserved.
+          © {year} Withyou. All rights reserved.
         </p>
         <nav className="flex gap-4">
           <Link
