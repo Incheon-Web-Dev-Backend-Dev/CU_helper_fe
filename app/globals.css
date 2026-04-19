@@ -21,3 +21,12 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* 카카오 roughmap 반응형 */
+.root_daum_roughmap,
+.root_daum_roughmap_landing {
+  width: 100% !important;
+}
+.root_daum_roughmap iframe {
+  width: 100% !important;
+}

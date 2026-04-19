@@ -7,7 +7,7 @@ import { Menu, X, User, ShieldCheck, HeartHandshake } from "lucide-react";
 /*** 햄버거 메뉴 항목 정의 ***/
 const navLinks = [
   {
-    href: "/user",
+    href: "/select",
     label: "사용자",
     icon: User,
     desc: "서비스 이용 안내",

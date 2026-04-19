@@ -44,9 +44,9 @@ export default function HomePage() {
           쉽고 빠르게 확인하고 신청하세요.
         </p>
         <div className="flex flex-col gap-3">
-          {/*** 시작하기 버튼 - info 페이지로 이동 ***/}
+          {/*** 시작하기 버튼 - select 페이지로 이동 ***/}
           <Link
-            href="/info"
+            href="/select"
             className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#693B97] text-sm font-medium text-white transition-all duration-200 hover:bg-[#4E2C72] active:scale-95"
           >
             시작하기
