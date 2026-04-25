@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Script from "next/script";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MapPin, ChevronLeft, ChevronDown, ChevronUp, Store } from "lucide-react";
@@ -9,28 +8,33 @@ import { MapPin, ChevronLeft, ChevronDown, ChevronUp, Store } from "lucide-react
 type DaumWindow = Window & {
   daum: {
     roughmap: {
-      Lander: new (opts: { timestamp: string; key: string; mapWidth: string; mapHeight: string }) => { render: () => void };
+      Lander: new (opts: {
+        timestamp: string;
+        key: string;
+        mapWidth: string;
+        mapHeight: string;
+      }) => { render: () => void };
     };
   };
 };
 
-/*** 지점 데이터 - 장곡점/은계점 카카오맵 roughmap 설정 ***/
+/*** 지점 데이터 - 장현 루벤시아 21단지점/은계 꽃길점 카카오맵 roughmap 설정 ***/
 const stores = [
   {
-    id: "jangkok",
+    id: "janghyeon",
     storeParam: 1,
-    name: "장곡점",
-    containerId: "daumRoughmapContainer1776501781994",
-    timestamp: "1776501781994",
-    mapKey: "mb4r4vizsss",
+    name: "장현 루벤시아 21단지점",
+    containerId: "daumRoughmapContainer1776947231849",
+    timestamp: "1776947231849",
+    mapKey: "m82qk6n23i5",
   },
   {
     id: "eungye",
     storeParam: 2,
-    name: "은계점",
-    containerId: "daumRoughmapContainer1776501765266",
-    timestamp: "1776501765266",
-    mapKey: "mayc4dn26ym",
+    name: "은계 꽃길점",
+    containerId: "daumRoughmapContainer1776947250892",
+    timestamp: "1776947250892",
+    mapKey: "2arfn5kxzm2v",
   },
 ];
 
@@ -38,70 +42,115 @@ const stores = [
 export default function SelectPage() {
   const router = useRouter();
   const [mapVisible, setMapVisible] = useState<Record<string, boolean>>({});
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [roughmapReady, setRoughmapReady] = useState(false);
   const initializedMapsRef = useRef<Set<string>>(new Set());
+  const pollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  /*** 지점 선택 → product 페이지로 이동 ***/
-  const handleSelectStore = (storeParam: number) => {
-    router.push(`/product?store=${storeParam}`);
-  };
+  const startPollingForRoughmap = useCallback(() => {
+    if (pollingTimerRef.current) return;
+    let attempts = 0;
+    pollingTimerRef.current = setInterval(() => {
+      attempts++;
+      const daumWindow = window as unknown as DaumWindow;
+      if (daumWindow.daum?.roughmap?.Lander) {
+        clearInterval(pollingTimerRef.current!);
+        pollingTimerRef.current = null;
+        setRoughmapReady(true);
+        return;
+      }
+      if (attempts >= 50) {
+        clearInterval(pollingTimerRef.current!);
+        pollingTimerRef.current = null;
+      }
+    }, 200);
+  }, []);
 
-  /*** roughmap 스크립트 로드 완료 시 state 업데이트 → useEffect 재실행 트리거 ***/
-  const handleScriptLoad = () => {
-    setScriptLoaded(true);
-  };
-
-  /*** 특정 지점 지도 초기화 (DOM 커밋 후 호출됨이 보장된 상황에서만 호출) ***/
-  const initializeMap = (storeId: string) => {
-    if (initializedMapsRef.current.has(storeId)) return;
-
-    const store = stores.find((s) => s.id === storeId);
-    if (!store) return;
-
-    try {
-      new (window as unknown as DaumWindow).daum.roughmap.Lander({
-        timestamp: store.timestamp,
-        key: store.mapKey,
-        mapWidth: "640",
-        mapHeight: "300",
-      }).render();
-      initializedMapsRef.current.add(storeId);
-    } catch {
-      // roughmap 초기화 실패 시 조용히 무시
-    }
-  };
+  useEffect(() => {
+    return () => {
+      if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
+    };
+  }, []);
 
   /***
-   * mapVisible 또는 scriptLoaded 변경 후 DOM 커밋이 완료된 시점에 실행.
-   * 이 시점에는 컨테이너가 이미 block 상태이므로 roughmap이 정상 렌더링됨.
+   * roughmapLoader.js는 document.write()로 roughmapLander.js를 주입하는데,
+   * 비동기 로드 환경에서는 document.write()가 브라우저에 의해 차단됨.
+   * → document.write를 미리 오버라이드하여 내부 스크립트 URL을 가로채고
+   *   createElement로 안전하게 주입하여 이 제약을 우회함.
    ***/
   useEffect(() => {
-    if (!scriptLoaded) return;
+    const daumWindow = window as unknown as DaumWindow;
 
-    Object.entries(mapVisible).forEach(([storeId, visible]) => {
-      if (visible) {
-        initializeMap(storeId);
+    if (daumWindow.daum?.roughmap?.Lander) {
+      setRoughmapReady(true);
+      return;
+    }
+    if (document.querySelector("script.daum_roughmap_loader_script")) {
+      startPollingForRoughmap();
+      return;
+    }
+
+    const originalWrite = document.write.bind(document);
+    let intercepted = false;
+
+    document.write = (html: string) => {
+      if (!intercepted) {
+        intercepted = true;
+        document.write = originalWrite;
+
+        const srcMatch = html.match(/src=["']([^"']+)["']/);
+        if (srcMatch) {
+          const landerScript = document.createElement("script");
+          landerScript.src = srcMatch[1];
+          landerScript.onload = startPollingForRoughmap;
+          document.head.appendChild(landerScript);
+        }
       }
+    };
+
+    const loaderScript = document.createElement("script");
+    loaderScript.src = "https://ssl.daumcdn.net/dmaps/map_js_init/roughmapLoader.js";
+    loaderScript.className = "daum_roughmap_loader_script";
+    loaderScript.onload = () => {
+      document.write = originalWrite;
+      startPollingForRoughmap();
+    };
+    document.head.appendChild(loaderScript);
+  }, [startPollingForRoughmap]);
+
+  /*** roughmap 준비 완료 시 모든 지점 지도를 선제 렌더링 ***/
+  useEffect(() => {
+    if (!roughmapReady) return;
+
+    const daumWindow = window as unknown as DaumWindow;
+    stores.forEach((store) => {
+      if (initializedMapsRef.current.has(store.id)) return;
+
+      new daumWindow.daum.roughmap.Lander({
+        timestamp: store.timestamp,
+        key: store.mapKey,
+        mapWidth: "360",
+        mapHeight: "260",
+      }).render();
+
+      initializedMapsRef.current.add(store.id);
     });
-  }, [mapVisible, scriptLoaded]);
+  }, [roughmapReady]);
 
   /*** 지도 토글 핸들러 ***/
   const toggleMap = (storeId: string) => {
     setMapVisible((prev) => ({ ...prev, [storeId]: !prev[storeId] }));
   };
 
+  /*** 지점 선택 → product 페이지로 이동 ***/
+  const handleSelectStore = (storeParam: number) => {
+    router.push(`/product?store=${storeParam}`);
+  };
+
   return (
     <div className="pb-10">
 
-      {/*** roughmap 로더 스크립트 - 페이지 당 한 번만 삽입 ***/}
-      <Script
-        src="https://ssl.daumcdn.net/dmaps/map_js_init/roughmapLoader.js"
-        strategy="afterInteractive"
-        onLoad={handleScriptLoad}
-      />
-
       {/*** 상단 헤더 ***/}
-      <div className="bg-gradient-to-br from-[#693B97] to-[#8B5BB8] px-5 pt-6 pb-10">
+      <div className="bg-linear-to-br from-[#693B97] to-[#8B5BB8] px-5 pt-6 pb-10">
         <Link
           href="/"
           className="mb-4 inline-flex items-center gap-1 text-xs text-white/70 transition-colors hover:text-white"
@@ -149,18 +198,14 @@ export default function SelectPage() {
             >
               <MapPin size={13} />
               위치보기
-              {mapVisible[id] ? (
-                <ChevronUp size={13} />
-              ) : (
-                <ChevronDown size={13} />
-              )}
+              {mapVisible[id] ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             </button>
 
             {/*** 카카오 roughmap 지도 컨테이너 ***/}
             <div className={mapVisible[id] ? "block" : "hidden"}>
               <div
                 id={containerId}
-                className="root_daum_roughmap root_daum_roughmap_landing w-full"
+                className="root_daum_roughmap root_daum_roughmap_landing"
               />
             </div>
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HeartHandshake, ShoppingBag, Bell } from "lucide-react";
+import TestConnectionButton from "@/components/common/TestConnectionButton";
 
 export const metadata: Metadata = {
   title: "Withyou",
@@ -93,6 +94,11 @@ export default function HomePage() {
           도와주는 서비스입니다. 신청 방법부터 사용처까지 한눈에 확인하세요.
         </p>
       </section>
+
+      {/*** 개발용 백엔드 연결 테스트 버튼 ***/}
+      <div className="mt-10 flex justify-center pb-4">
+        <TestConnectionButton />
+      </div>
 
     </div>
   );
