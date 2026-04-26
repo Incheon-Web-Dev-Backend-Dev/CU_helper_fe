@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${geistSans.variable} h-full antialiased`} style={{ colorScheme: "light" }}>
+    <html lang="ko" className={`${geistSans.variable} h-full antialiased`} style={{ colorScheme: "light" }} suppressHydrationWarning>
       <body className="h-full bg-white text-[#1A1A1A]">
         {children}
       </body>
