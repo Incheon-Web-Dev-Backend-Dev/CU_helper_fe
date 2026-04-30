@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getProductsByStore } from "@/lib/data/mockProducts";
+import { getAllProducts } from "@/lib/api/productApi";
 import { ProductList } from "@/components/product";
 
 const STORE_NAMES: Record<number, string> = {
@@ -7,7 +7,7 @@ const STORE_NAMES: Record<number, string> = {
   2: "은계꽃길점",
 };
 
-/*** 상품 페이지 - storeId 파라미터로 매장 구분, UI는 동일 ***/
+/*** 상품 페이지 - storeId 파라미터로 매장 구분, 상품 목록은 전체 공통 ***/
 export default async function ProductPage({
   searchParams,
 }: {
@@ -20,12 +20,12 @@ export default async function ProductPage({
     redirect("/select");
   }
 
-  const products = getProductsByStore(storeId);
   const storeName = STORE_NAMES[storeId];
+  const products = await getAllProducts();
 
   return (
     <div className="min-h-screen bg-[#F8F8F8]">
-      <ProductList products={products} storeName={storeName} />
+      <ProductList products={products} storeName={storeName} storeId={storeId} />
     </div>
   );
 }

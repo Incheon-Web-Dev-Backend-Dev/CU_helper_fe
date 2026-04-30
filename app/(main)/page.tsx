@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { HeartHandshake, ShoppingBag, Bell } from "lucide-react";
 import TestConnectionButton from "@/components/common/TestConnectionButton";
+import OrderLookupButton from "@/components/order/OrderLookupButton";
 
 export const metadata: Metadata = {
   title: "Withyou",
@@ -52,11 +53,13 @@ export default function HomePage() {
           >
             시작하기
           </Link>
+          {/*** 나의 예약 조회하기 버튼 - 클라이언트 컴포넌트 ***/}
+          <OrderLookupButton />
           <a
-            href="#features"
+            href="/info"
             className="inline-flex h-11 w-full items-center justify-center rounded-full border border-zinc-200 text-sm font-medium text-zinc-600 transition-all duration-200 hover:bg-[#F8F8F8] active:scale-95"
           >
-            더 알아보기
+            여성용품 지원사업이란?
           </a>
         </div>
       </section>

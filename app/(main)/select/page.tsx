@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MapPin, ChevronLeft, ChevronDown, ChevronUp, Store } from "lucide-react";
+import { MapPin, ChevronLeft, ChevronDown, ChevronUp, Store, Loader2 } from "lucide-react";
 
 type DaumWindow = Window & {
   daum: {
@@ -43,6 +43,7 @@ export default function SelectPage() {
   const router = useRouter();
   const [mapVisible, setMapVisible] = useState<Record<string, boolean>>({});
   const [roughmapReady, setRoughmapReady] = useState(false);
+  const [loadingStoreId, setLoadingStoreId] = useState<number | null>(null);
   const initializedMapsRef = useRef<Set<string>>(new Set());
   const pollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -141,13 +142,21 @@ export default function SelectPage() {
     setMapVisible((prev) => ({ ...prev, [storeId]: !prev[storeId] }));
   };
 
-  /*** 지점 선택 → product 페이지로 이동 ***/
+  /*** 지점 선택 → product 페이지로 이동, 로딩 상태 활성화 ***/
   const handleSelectStore = (storeParam: number) => {
+    setLoadingStoreId(storeParam);
     router.push(`/product?store=${storeParam}`);
   };
 
   return (
     <div className="pb-10">
+
+      {/*** 상단 진행 바 - 지점 선택 후 페이지 이동 중 표시 ***/}
+      {loadingStoreId !== null && (
+        <div className="fixed top-0 left-0 right-0 z-50 h-1 overflow-hidden bg-[#693B97]/20">
+          <div className="h-full w-2/5 bg-[#693B97] animate-[progress-slide_1s_ease-in-out_infinite]" />
+        </div>
+      )}
 
       {/*** 상단 헤더 ***/}
       <div className="bg-linear-to-br from-[#693B97] to-[#8B5BB8] px-5 pt-6 pb-10">
@@ -173,17 +182,24 @@ export default function SelectPage() {
             <button
               type="button"
               onClick={() => handleSelectStore(storeParam)}
-              className="flex w-full items-center gap-4 p-5 text-left transition-colors hover:bg-[#F8F8F8] active:bg-[#693B97]/5"
+              disabled={loadingStoreId !== null}
+              className="flex w-full items-center gap-4 p-5 text-left transition-colors hover:bg-[#F8F8F8] active:bg-[#693B97]/5 disabled:cursor-not-allowed"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#693B97]/10">
                 <Store size={20} className="text-[#693B97]" />
               </div>
               <div className="flex-1">
-                <p className="text-base font-bold text-[#1A1A1A]">{name}</p>
-                <p className="text-xs text-zinc-400 mt-0.5">탭하여 선택</p>
+                <p className={`text-base font-bold ${loadingStoreId !== null && loadingStoreId !== storeParam ? "text-zinc-300" : "text-[#1A1A1A]"}`}>{name}</p>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  {loadingStoreId === storeParam ? "이동 중..." : "탭하여 선택"}
+                </p>
               </div>
-              <div className="rounded-full bg-[#693B97] px-3 py-1.5">
-                <span className="text-xs font-semibold text-white">선택</span>
+              <div className={`rounded-full px-3 py-1.5 transition-colors ${loadingStoreId !== null && loadingStoreId !== storeParam ? "bg-zinc-200" : "bg-[#693B97]"}`}>
+                {loadingStoreId === storeParam ? (
+                  <Loader2 size={14} className="animate-spin text-white" />
+                ) : (
+                  <span className="text-xs font-semibold text-white">선택</span>
+                )}
               </div>
             </button>
 

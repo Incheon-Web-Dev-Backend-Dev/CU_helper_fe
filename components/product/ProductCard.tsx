@@ -2,7 +2,7 @@
 
 import { Minus, Plus } from "lucide-react";
 import { Product } from "@/lib/types/product";
-import { calcItemTotal, calcFreeQty } from "@/lib/utils/priceUtils";
+import { calcItemTotal, calcFreeQty, calcEventRemaining } from "@/lib/utils/priceUtils";
 
 interface ProductCardProps {
   product: Product;
@@ -37,6 +37,7 @@ export default function ProductCard({
     product.eventType
   );
   const freeQty = calcFreeQty(cartQuantity, product.isEvent, product.eventType);
+  const eventRemaining = calcEventRemaining(cartQuantity, product.isEvent, product.eventType);
 
   const displayPrice = cartQuantity > 0 ? itemTotal : product.consumerPrice;
   const formattedPrice = displayPrice.toLocaleString("ko-KR");
@@ -53,6 +54,15 @@ export default function ProductCard({
         >
           {eventLabel}
         </span>
+      )}
+
+      {/*** 이벤트 혜택 미완성 힌트 배너 ***/}
+      {eventRemaining > 0 && cartQuantity > 0 && (
+        <div className="mx-3 mt-3 flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5">
+          <span className="text-[11px] font-semibold text-amber-600">
+            해당 상품은 이벤트 중이에요! 상품을 추가해주세요.
+          </span>
+        </div>
       )}
 
       {/*** 카드 내부 - 이미지 좌, 정보 우 ***/}

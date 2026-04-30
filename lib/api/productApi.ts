@@ -1,19 +1,6 @@
 /*** 상품 관련 API 함수 ***/
 import apiClient from "@/lib/api/client";
-
-/*** 백엔드 ProductDto 응답 타입 ***/
-export interface ProductDto {
-  id: number;
-  barcode: number;
-  name: string;
-  consumerPrice: number;
-  isEvent: boolean;
-  eventType: number | null;
-  quantity: number;
-  createdAt: string;
-  image: string | null;
-  description: string | null;
-}
+import { Product } from "@/lib/types/product";
 
 /*** 상품 등록 요청 타입 ***/
 export interface ProductCreateRequest {
@@ -38,8 +25,8 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 /*** 상품 전체 조회 ***/
-export async function getAllProducts(): Promise<ProductDto[]> {
-  const response = await apiClient.get("/api/products");
+export async function getAllProducts(): Promise<Product[]> {
+  const response = await apiClient.get<Product[]>("/api/products");
   return response.data;
 }
 

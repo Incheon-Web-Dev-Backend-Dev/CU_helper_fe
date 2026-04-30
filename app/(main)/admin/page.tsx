@@ -1,7 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useState } from "react";
 import {
   ChevronLeft,
   ClipboardList,
@@ -11,6 +11,7 @@ import {
   PlusCircle,
   Search,
 } from "lucide-react";
+import AdminLoginScreen from "@/components/admin/AdminLoginScreen";
 
 /*** 상품 관리 서브메뉴 ***/
 const productSubMenus = [
@@ -26,9 +27,31 @@ const productSubMenus = [
   },
 ];
 
-/*** 관리자 메인 페이지 ***/
+/*** 관리자 메인 페이지 - sessionStorage 기반 인증 게이트 적용 ***/
 export default function AdminPage() {
   const [productOpen, setProductOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
+
+  /*** 마운트 시 세션에 저장된 adminKey 확인 ***/
+  useEffect(() => {
+    const storedKey = sessionStorage.getItem("adminKey");
+    if (storedKey) {
+      setIsAuthenticated(true);
+    }
+    setIsAuthChecked(true);
+  }, []);
+
+  /*** 로그인 성공 콜백 - 인증 상태 업데이트 ***/
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
+  if (!isAuthChecked) return null;
+
+  if (!isAuthenticated) {
+    return <AdminLoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div className="pb-10">

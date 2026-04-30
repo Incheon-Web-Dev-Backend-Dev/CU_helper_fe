@@ -14,16 +14,22 @@ const BATCH_SIZE = 5;
 interface ProductListProps {
   products: Product[];
   storeName: string;
+  storeId: number;
 }
 
 /*** 상품 목록 - 검색 + 무한 스크롤 + 장바구니 상태 관리 ***/
-export default function ProductList({ products, storeName }: ProductListProps) {
+export default function ProductList({ products, storeName, storeId }: ProductListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [displayCount, setDisplayCount] = useState(BATCH_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [cartQuantities, setCartQuantities] = useState<CartQuantities>({});
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartDialogOpen, setIsCartDialogOpen] = useState(false);
+
+  /*** 예약 완료 후 장바구니 초기화 ***/
+  const handleOrderSuccess = () => {
+    setCartQuantities({});
+  };
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   /*** 장바구니 합계 계산 (이벤트 할인 반영) ***/
@@ -199,7 +205,10 @@ export default function ProductList({ products, storeName }: ProductListProps) {
           products={products}
           cartQuantities={cartQuantities}
           totalPrice={totalPrice}
+          storeId={storeId}
           onClose={() => setIsCartDialogOpen(false)}
+          onOrderSuccess={handleOrderSuccess}
+          onDecrease={handleDecrease}
         />
       )}
 

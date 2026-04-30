@@ -22,3 +22,15 @@ export function calcFreeQty(
   if (eventType === 2) return Math.floor(quantity / 3);
   return 0;
 }
+
+/*** 이벤트 혜택 묶음을 채우기 위해 추가로 필요한 수량 (0이면 완성된 묶음) ***/
+export function calcEventRemaining(
+  quantity: number,
+  isEvent: boolean,
+  eventType: 0 | 1 | 2
+): number {
+  if (!isEvent || quantity === 0) return 0;
+  if (eventType === 1) return quantity % 2 === 0 ? 0 : 1;
+  if (eventType === 2) return (3 - (quantity % 3)) % 3;
+  return 0;
+}
